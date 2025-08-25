@@ -49,6 +49,41 @@
 	<lib-file src="src/android/libs/mapsforge-map-android-master-0.16.0.jar" />
 	<lib-file src="src/android/libs/androidsvg-1.4.jar" />
     </platform>
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="RdzWx">
+                <param name="ios-package" value="RdzWx" />
+            </feature>
+        </config-file>
+        <config-file target="*-Info.plist" parent="*">
+            <key>NSLocationWhenInUseUsageDescription</key>
+            <string>This app needs location access to track GPS position and share with TTGO devices.</string>
+            <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+            <string>This app needs location access to track GPS position and share with TTGO devices.</string>
+            <key>NSLocalNetworkUsageDescription</key>
+            <string>This app needs local network access to discover and connect to TTGO ESP32 devices.</string>
+            <key>NSBonjourServices</key>
+            <array>
+                <string>_jsonrdz._tcp</string>
+            </array>
+        </config-file>
+        <header-file src="src/ios/RdzWx.h" />
+        <source-file src="src/ios/RdzWx.m" />
+        <source-file src="src/ios/JsonRdzHandler.h" />
+        <source-file src="src/ios/JsonRdzHandler.m" />
+        <source-file src="src/ios/GPSHandler.h" />
+        <source-file src="src/ios/GPSHandler.m" />
+        <source-file src="src/ios/MDNSHandler.h" />
+        <source-file src="src/ios/MDNSHandler.m" />
+        <source-file src="src/ios/WgsToEgm.h" />
+        <source-file src="src/ios/WgsToEgm.m" />
+        <source-file src="src/ios/OfflineTileCache.h" />
+        <source-file src="src/ios/OfflineTileCache.m" />
+        <resource-file src="src/android/assets/WW15MGH.DAC" />
+        <framework src="CoreLocation.framework" />
+        <framework src="Network.framework" weak="true" />
+        <framework src="MapKit.framework" />
+    </platform>
 </plugin>
 
 
