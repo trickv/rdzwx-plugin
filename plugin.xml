@@ -48,6 +48,7 @@
 	<lib-file src="src/android/libs/mapsforge-map-reader-master-0.16.0.jar" />
 	<lib-file src="src/android/libs/mapsforge-map-android-master-0.16.0.jar" />
 	<lib-file src="src/android/libs/androidsvg-1.4.jar" />
+        <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
     </platform>
     <platform name="ios">
         <config-file target="config.xml" parent="/*">

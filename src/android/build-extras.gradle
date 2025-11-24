@@ -1,0 +1,7 @@
+// Enable AIDL support for IrdzwxPredict interface
+// Required for AGP 8.0+ where AIDL is disabled by default
+android {
+    buildFeatures {
+        aidl true
+    }
+}
