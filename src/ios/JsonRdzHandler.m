@@ -57,19 +57,19 @@
 - (void)closeConnection {
     if (self.inputStream) {
         [self.inputStream close];
-        [self.inputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        [self.inputStream removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
         self.inputStream = nil;
     }
-    
+
     if (self.outputStream) {
         [self.outputStream close];
-        [self.outputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        [self.outputStream removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
         self.outputStream = nil;
     }
-    
+
     self.running = NO;
     [self.plugin handleTtgoStatus:nil];
-    
+
     NSLog(@"JsonRdzHandler: Connection closed");
 }
 
@@ -130,43 +130,54 @@
 
 - (void)attemptConnection {
     NSLog(@"JsonRdzHandler: Attempting to connect to %@:%d", self.host, self.port);
-    
+
     CFReadStreamRef readStream;
     CFWriteStreamRef writeStream;
-    
+
     CFStreamCreatePairWithSocketToHost(NULL, (__bridge CFStringRef)self.host, self.port, &readStream, &writeStream);
-    
+
     if (!readStream || !writeStream) {
         NSLog(@"JsonRdzHandler: Failed to create streams");
         return;
     }
-    
+
     self.inputStream = (__bridge NSInputStream *)readStream;
     self.outputStream = (__bridge NSOutputStream *)writeStream;
-    
+
     [self.inputStream setDelegate:self];
     [self.outputStream setDelegate:self];
-    
-    [self.inputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    [self.outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    
+
+    // Schedule streams on main run loop (it's always running)
+    [self.inputStream scheduleInRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
+    [self.outputStream scheduleInRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
+
     [self.inputStream open];
     [self.outputStream open];
-    
+
+    NSLog(@"JsonRdzHandler: Streams opened, waiting for connection...");
+
     // Set connection timeout
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         if (self.outputStream.streamStatus != NSStreamStatusOpen) {
-            NSLog(@"JsonRdzHandler: Connection timeout");
+            NSLog(@"JsonRdzHandler: Connection timeout (status: %ld)", (long)self.outputStream.streamStatus);
             [self closeConnection];
         }
     });
-    
-    // Run the connection
-    while (self.running && self.active && 
-           (self.inputStream.streamStatus == NSStreamStatusOpen || self.outputStream.streamStatus == NSStreamStatusOpen)) {
-        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+
+    // Wait for streams to connect and stay open
+    while (self.running && self.active) {
+        NSStreamStatus inputStatus = self.inputStream.streamStatus;
+        NSStreamStatus outputStatus = self.outputStream.streamStatus;
+
+        // Exit if either stream has error or ended
+        if (inputStatus == NSStreamStatusError || inputStatus == NSStreamStatusClosed ||
+            outputStatus == NSStreamStatusError || outputStatus == NSStreamStatusClosed) {
+            break;
+        }
+
+        [NSThread sleepForTimeInterval:0.1];
     }
-    
+
     [self closeConnection];
 }
 
