@@ -344,12 +344,21 @@ class MDNSHandler {
         }
     }
 
+    private fun sendMdnsStatus(status: String, details: String = "") {
+        if (rdzwx?.cb == null) return
+        val msg = "{ \"msgtype\": \"mdnsstatus\", \"status\": \"$status\", \"details\": \"$details\" }"
+        val plugRes = org.apache.cordova.PluginResult(org.apache.cordova.PluginResult.Status.OK, msg)
+        plugRes.setKeepCallback(true)
+        rdzwx?.cb?.sendPluginResult(plugRes)
+    }
+
     // Instantiate a new DiscoveryListener
     private val discoveryListener = object : NsdManager.DiscoveryListener {
 
         // Called as soon as service discovery begins.
         override fun onDiscoveryStarted(regType: String) {
             Log.d(LOG_TAG, "Service discovery started")
+            sendMdnsStatus("searching")
         }
 
         override fun onServiceFound(service: NsdServiceInfo) {
@@ -360,8 +369,10 @@ class MDNSHandler {
                 service.serviceType != SERVICE_TYPE ->
                     Log.d(LOG_TAG, "Unknown Service Type: ${service.serviceType}")
                 // else lookup host and port
-                else ->
+                else -> {
+                    sendMdnsStatus("found", service.serviceName)
                     nsdManager?.resolveService(service, MyResolveListener(rdzwx))
+                }
             }
             Log.d(LOG_TAG, "serviceName: ${service.serviceName}  host: ${service.host}, port: ${service.port}")
         }
@@ -370,20 +381,24 @@ class MDNSHandler {
             // When the network service is no longer available.
             // Internal bookkeeping code goes here.
             Log.e(LOG_TAG, "service lost: $service")
+            sendMdnsStatus("searching")
             // TODO: remove from available devices...
         }
 
         override fun onDiscoveryStopped(serviceType: String) {
             Log.i(LOG_TAG, "Discovery stopped: $serviceType")
+            sendMdnsStatus("inactive")
         }
 
         override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
             Log.e(LOG_TAG, "Discovery failed: Error code:$errorCode")
+            sendMdnsStatus("error", "Failed to start: $errorCode")
             nsdManager?.stopServiceDiscovery(this)
         }
 
         override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
             Log.e(LOG_TAG, "Discovery failed: Error code:$errorCode")
+            sendMdnsStatus("error", "Failed to stop: $errorCode")
             nsdManager?.stopServiceDiscovery(this)
         }
     }
