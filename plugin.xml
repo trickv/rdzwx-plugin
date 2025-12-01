@@ -56,18 +56,20 @@
                 <param name="ios-package" value="RdzWx" />
             </feature>
         </config-file>
-        <config-file target="*-Info.plist" parent="/">
-            <key>NSLocationWhenInUseUsageDescription</key>
+        <edit-config file="*-Info.plist" mode="merge" target="NSLocationWhenInUseUsageDescription">
             <string>This app needs location access to track GPS position and share with TTGO devices.</string>
-            <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+        </edit-config>
+        <edit-config file="*-Info.plist" mode="merge" target="NSLocationAlwaysAndWhenInUseUsageDescription">
             <string>This app needs location access to track GPS position and share with TTGO devices.</string>
-            <key>NSLocalNetworkUsageDescription</key>
+        </edit-config>
+        <edit-config file="*-Info.plist" mode="merge" target="NSLocalNetworkUsageDescription">
             <string>This app needs local network access to discover and connect to TTGO ESP32 devices.</string>
-            <key>NSBonjourServices</key>
+        </edit-config>
+        <edit-config file="*-Info.plist" mode="merge" target="NSBonjourServices">
             <array>
                 <string>_jsonrdz._tcp</string>
             </array>
-        </config-file>
+        </edit-config>
         <header-file src="src/ios/RdzWx.h" />
         <source-file src="src/ios/RdzWx.m" />
         <source-file src="src/ios/JsonRdzHandler.h" />

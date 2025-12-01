@@ -18,6 +18,7 @@
 }
 
 - (void)start {
+    NSLog(@"GPSHandler: start() called");
     [self requestLocationPermissions];
 }
 
@@ -27,20 +28,29 @@
 }
 
 - (void)requestLocationPermissions {
-    CLAuthorizationStatus status = [CLLocationManager authorizationStatus];
-    
+    CLAuthorizationStatus status;
+    if (@available(iOS 14.0, *)) {
+        status = self.locationManager.authorizationStatus;
+    } else {
+        status = [CLLocationManager authorizationStatus];
+    }
+
+    NSLog(@"GPSHandler: Current authorization status: %d", (int)status);
+
     switch (status) {
         case kCLAuthorizationStatusNotDetermined:
+            NSLog(@"GPSHandler: Requesting location permission...");
             [self.locationManager requestWhenInUseAuthorization];
             break;
-            
+
         case kCLAuthorizationStatusDenied:
         case kCLAuthorizationStatusRestricted:
-            NSLog(@"GPSHandler: Location access denied");
+            NSLog(@"GPSHandler: Location access denied or restricted - cannot start");
             break;
-            
+
         case kCLAuthorizationStatusAuthorizedWhenInUse:
         case kCLAuthorizationStatusAuthorizedAlways:
+            NSLog(@"GPSHandler: Already authorized, starting location updates");
             [self startLocationUpdates];
             break;
     }
@@ -81,21 +91,39 @@
     NSLog(@"GPSHandler: Location error: %@", error.localizedDescription);
 }
 
-- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
+// iOS 14+ delegate method (preferred)
+- (void)locationManagerDidChangeAuthorization:(CLLocationManager *)manager {
+    CLAuthorizationStatus status;
+    if (@available(iOS 14.0, *)) {
+        status = manager.authorizationStatus;
+    } else {
+        status = [CLLocationManager authorizationStatus];
+    }
+
+    NSLog(@"GPSHandler: Authorization status changed to: %d", (int)status);
+
     switch (status) {
         case kCLAuthorizationStatusAuthorizedWhenInUse:
         case kCLAuthorizationStatusAuthorizedAlways:
+            NSLog(@"GPSHandler: Location authorization granted");
             [self startLocationUpdates];
             break;
-            
+
         case kCLAuthorizationStatusDenied:
         case kCLAuthorizationStatusRestricted:
-            NSLog(@"GPSHandler: Location authorization denied");
+            NSLog(@"GPSHandler: Location authorization denied or restricted");
             break;
-            
+
         case kCLAuthorizationStatusNotDetermined:
+            NSLog(@"GPSHandler: Location authorization not yet determined");
             break;
     }
+}
+
+// Legacy iOS 13 and earlier delegate method (for backward compatibility)
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
+    NSLog(@"GPSHandler: Legacy authorization delegate called (iOS 13-)");
+    [self locationManagerDidChangeAuthorization:manager];
 }
 
 @end
