@@ -70,6 +70,9 @@
                 <string>_jsonrdz._tcp</string>
             </array>
         </edit-config>
+        <edit-config file="*-Info.plist" mode="merge" target="com.apple.security.get-task-allow">
+            <true/>
+        </edit-config>
         <header-file src="src/ios/RdzWx.h" />
         <source-file src="src/ios/RdzWx.m" />
         <source-file src="src/ios/JsonRdzHandler.h" />
