@@ -141,8 +141,8 @@
         return;
     }
 
-    self.inputStream = (__bridge NSInputStream *)readStream;
-    self.outputStream = (__bridge NSOutputStream *)writeStream;
+    self.inputStream = (__bridge_transfer NSInputStream *)readStream;
+    self.outputStream = (__bridge_transfer NSOutputStream *)writeStream;
 
     [self.inputStream setDelegate:self];
     [self.outputStream setDelegate:self];
