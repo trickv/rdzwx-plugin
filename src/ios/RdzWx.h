@@ -37,6 +37,7 @@
 // Internal methods for handlers
 - (void)handleJsonrdzData:(NSString*)data;
 - (void)handleTtgoStatus:(NSString*)ip;
+- (void)handleMdnsStatus:(NSString*)status details:(NSString*)details;
 - (void)updateGps:(double)latitude longitude:(double)longitude altitude:(double)altitude bearing:(float)bearing accuracy:(float)accuracy;
 - (void)runJsonRdz:(NSString*)host port:(int)port;
 

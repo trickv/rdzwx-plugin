@@ -56,13 +56,14 @@
     if (self.isDiscovering) {
         return;
     }
-    
+
     self.serviceBrowser = [[NSNetServiceBrowser alloc] init];
     self.serviceBrowser.delegate = self;
-    
+
     [self.serviceBrowser searchForServicesOfType:@"_jsonrdz._tcp." inDomain:@"local."];
     self.isDiscovering = YES;
-    
+
+    [self.plugin handleMdnsStatus:@"searching" details:nil];
     NSLog(@"MDNSHandler: Started service discovery for _jsonrdz._tcp.");
 }
 
@@ -70,12 +71,13 @@
     if (!self.isDiscovering) {
         return;
     }
-    
+
     [self.serviceBrowser stop];
     self.serviceBrowser = nil;
     [self.discoveredServices removeAllObjects];
     self.isDiscovering = NO;
-    
+
+    [self.plugin handleMdnsStatus:@"inactive" details:nil];
     NSLog(@"MDNSHandler: Stopped service discovery");
 }
 
@@ -100,7 +102,8 @@
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)browser didFindService:(NSNetService *)service moreComing:(BOOL)moreComing {
     NSLog(@"MDNSHandler: Found service: %@", service.name);
-    
+
+    [self.plugin handleMdnsStatus:@"found" details:service.name];
     [self.discoveredServices addObject:service];
     service.delegate = self;
     [service resolveWithTimeout:10.0];
@@ -109,10 +112,13 @@
 - (void)netServiceBrowser:(NSNetServiceBrowser *)browser didRemoveService:(NSNetService *)service moreComing:(BOOL)moreComing {
     NSLog(@"MDNSHandler: Service lost: %@", service.name);
     [self.discoveredServices removeObject:service];
+    [self.plugin handleMdnsStatus:@"searching" details:nil];
 }
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)browser didNotSearch:(NSDictionary<NSString *,NSNumber *> *)errorDict {
     NSLog(@"MDNSHandler: Service discovery failed: %@", errorDict);
+    NSString *errorMsg = [NSString stringWithFormat:@"Failed to start: %@", errorDict];
+    [self.plugin handleMdnsStatus:@"error" details:errorMsg];
 }
 
 - (void)netServiceBrowserDidStopSearch:(NSNetServiceBrowser *)browser {

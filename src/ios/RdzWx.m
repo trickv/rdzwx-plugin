@@ -192,16 +192,28 @@
 
 - (void)handleTtgoStatus:(NSString*)ip {
     if (!self.callbackId) return;
-    
+
     NSString* status;
     if (ip) {
         status = [NSString stringWithFormat:@"{ \"msgtype\": \"ttgostatus\", \"state\": \"online\", \"ip\": \"%@\" }", ip];
     } else {
         status = @"{ \"msgtype\": \"ttgostatus\", \"state\": \"offline\", \"ip\": \"\" }";
     }
-    
-    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK 
+
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
                                               messageAsString:status];
+    [result setKeepCallbackAsBool:YES];
+    [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
+}
+
+- (void)handleMdnsStatus:(NSString*)status details:(NSString*)details {
+    if (!self.callbackId) return;
+
+    NSString* msg = [NSString stringWithFormat:@"{ \"msgtype\": \"mdnsstatus\", \"status\": \"%@\", \"details\": \"%@\" }",
+                     status, details ? details : @""];
+
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                              messageAsString:msg];
     [result setKeepCallbackAsBool:YES];
     [self.commandDelegate sendPluginResult:result callbackId:self.callbackId];
 }
