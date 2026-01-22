@@ -8,7 +8,7 @@
 
 @class RdzWx;
 
-@interface MDNSHandler : NSObject
+@interface MDNSHandler : NSObject <NSNetServiceBrowserDelegate, NSNetServiceDelegate>
 
 @property (nonatomic, weak) RdzWx *plugin;
 
