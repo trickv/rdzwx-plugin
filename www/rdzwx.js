@@ -26,6 +26,9 @@ var RdzWx = {
      },
     mdnsUpdateDiscovery: function( mode, addr, callback) {
         exec(callback, function(err) { callback('error: '+err); }, "RdzWx", "mdnsUpdateDiscovery", [mode, addr]);
+     },
+    fetchUrl: function(url, successCallback, errorCallback) {
+        exec(successCallback, errorCallback, "RdzWx", "fetchUrl", [url]);
      }
 
 };

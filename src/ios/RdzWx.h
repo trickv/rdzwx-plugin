@@ -33,6 +33,7 @@
 - (void)gettile:(CDVInvokedUrlCommand*)command;
 - (void)selstorage:(CDVInvokedUrlCommand*)command;
 - (void)mdnsUpdateDiscovery:(CDVInvokedUrlCommand*)command;
+- (void)fetchUrl:(CDVInvokedUrlCommand*)command;
 
 // Internal methods for handlers
 - (void)handleJsonrdzData:(NSString*)data;

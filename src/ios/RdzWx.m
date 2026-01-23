@@ -149,11 +149,59 @@
 - (void)mdnsUpdateDiscovery:(CDVInvokedUrlCommand*)command {
     NSString* mode = [command.arguments objectAtIndex:0];
     NSString* addr = [command.arguments objectAtIndex:1];
-    
+
     [self.mdnsHandler updateDiscovery:mode address:addr];
-    
+
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+}
+
+- (void)fetchUrl:(CDVInvokedUrlCommand*)command {
+    NSString* urlString = [command.arguments objectAtIndex:0];
+    NSURL* url = [NSURL URLWithString:urlString];
+
+    if (!url) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                    messageAsString:@"Invalid URL"];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
+    NSLog(@"RdzWx fetchUrl: %@", urlString);
+
+    NSURLSessionConfiguration* config = [NSURLSessionConfiguration defaultSessionConfiguration];
+    config.timeoutIntervalForRequest = 30.0;
+    NSURLSession* session = [NSURLSession sessionWithConfiguration:config];
+
+    NSURLSessionDataTask* task = [session dataTaskWithURL:url
+        completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+            CDVPluginResult* result;
+
+            if (error) {
+                NSLog(@"RdzWx fetchUrl error: %@", error.localizedDescription);
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                           messageAsString:error.localizedDescription];
+            } else {
+                NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+                NSInteger statusCode = httpResponse.statusCode;
+
+                if (statusCode >= 200 && statusCode < 300) {
+                    NSString* responseString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                    NSLog(@"RdzWx fetchUrl success: %ld bytes", (long)data.length);
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                               messageAsString:responseString];
+                } else {
+                    NSString* errorMsg = [NSString stringWithFormat:@"HTTP %ld", (long)statusCode];
+                    NSLog(@"RdzWx fetchUrl HTTP error: %@", errorMsg);
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                               messageAsString:errorMsg];
+                }
+            }
+
+            [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        }];
+
+    [task resume];
 }
 
 #pragma mark - Handler callbacks

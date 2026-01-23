@@ -27,6 +27,8 @@ import android.net.nsd.NsdServiceInfo
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.URL
+import java.net.HttpURLConnection
 import java.io.ByteArrayInputStream
 import java.io.OutputStream
 import kotlin.text.Charsets
@@ -523,8 +525,38 @@ class RdzWx : CordovaPlugin() {
 		LOG.d(LOG_TAG, "calling selstorage")
 		val type = args.getString(0)
 	 	var itype = 0
-		if( type == "theme" ) { itype = 1 }	
+		if( type == "theme" ) { itype = 1 }
 		selstorage(itype, callbackContext)
+		return true
+	    }
+	    "fetchUrl" -> {
+		val urlString = args.getString(0)
+		LOG.d(LOG_TAG, "fetchUrl: $urlString")
+		cordova.getThreadPool().execute {
+		    try {
+			val url = URL(urlString)
+			val connection = url.openConnection() as HttpURLConnection
+			connection.requestMethod = "GET"
+			connection.connectTimeout = 30000
+			connection.readTimeout = 30000
+
+			val responseCode = connection.responseCode
+			if (responseCode in 200..299) {
+			    val inputStream = connection.inputStream
+			    val response = inputStream.bufferedReader().use { it.readText() }
+			    inputStream.close()
+			    LOG.d(LOG_TAG, "fetchUrl success: ${response.length} bytes")
+			    callbackContext.success(response)
+			} else {
+			    LOG.d(LOG_TAG, "fetchUrl HTTP error: $responseCode")
+			    callbackContext.error("HTTP $responseCode")
+			}
+			connection.disconnect()
+		    } catch (e: Exception) {
+			LOG.d(LOG_TAG, "fetchUrl exception: ${e.message}")
+			callbackContext.error(e.message ?: "Unknown error")
+		    }
+		}
 		return true
 	    }
             else -> {
